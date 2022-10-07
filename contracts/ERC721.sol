@@ -1,33 +1,30 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.9.0; //should be greater than 0.8
+pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract ATNFT is ERC721URIStorage, Ownable {
+contract ATNFT is ERC721URIStorage {
     using Counters for Counters.Counter;
-    Counters.Counter private supply;
+    Counters.Counter private _supply;
 
-    constructor() ERC721("Ayush Thakur", "ATNFT") {
-        //constant param reduces gas
-    }
+    constructor() ERC721("Ayush Thakur", "ATNFT") {}
+
+    event minted(address _from, uint256 _id, string _tokenURI);
 
     receive() external payable {}
 
     function mint(string memory _tokenURI) external payable returns (uint256) {
-        require(
-            !isContract(msg.sender),
-            "msg.sender is not a externally owned wallet"
-        );
-        require(msg.value == 0.5 ether, "0.5 eth is required to mint.");
-        supply.increment();
+        require(!isContract(msg.sender), "msg.sender not EOW");
+        require(msg.value == 0.5 ether, "0.5 eth required to mint");
+        _supply.increment();
 
-        uint256 tokenId = supply.current();
+        uint256 tokenId = _supply.current();
         _mint(msg.sender, tokenId);
 
         _setTokenURI(tokenId, _tokenURI);
+
+        emit minted(msg.sender, tokenId, _tokenURI);
 
         return tokenId;
     }
@@ -46,7 +43,7 @@ contract ATNFT is ERC721URIStorage, Ownable {
 }
 
 contract Testing {
-    ATNFT tokenContract;
+    ATNFT private tokenContract;
 
     constructor(address _contractAddress) {
         tokenContract = ATNFT(payable(_contractAddress));
@@ -55,6 +52,6 @@ contract Testing {
     receive() external payable {}
 
     function callMint() public payable {
-        tokenContract.mint(" ");
+        tokenContract.mint("");
     }
 }
