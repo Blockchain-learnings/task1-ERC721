@@ -8,9 +8,9 @@ contract ATNFT is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _supply;
 
-    constructor() ERC721("Ayush Thakur", "ATNFT") {}
+    event Minted(address _from, uint256 _id, string _tokenURI);
 
-    event minted(address _from, uint256 _id, string _tokenURI);
+    constructor() ERC721("Ayush Thakur", "ATNFT") {}
 
     receive() external payable {}
 
@@ -24,7 +24,7 @@ contract ATNFT is ERC721URIStorage {
 
         _setTokenURI(tokenId, _tokenURI);
 
-        emit minted(msg.sender, tokenId, _tokenURI);
+        emit Minted(msg.sender, tokenId, _tokenURI);
 
         return tokenId;
     }
@@ -43,15 +43,15 @@ contract ATNFT is ERC721URIStorage {
 }
 
 contract Testing {
-    ATNFT private tokenContract;
+    ATNFT private _tokenContract;
 
     constructor(address _contractAddress) {
-        tokenContract = ATNFT(payable(_contractAddress));
+        _tokenContract = ATNFT(payable(_contractAddress));
     }
 
     receive() external payable {}
 
     function callMint() public payable {
-        tokenContract.mint("");
+        _tokenContract.mint("");
     }
 }
