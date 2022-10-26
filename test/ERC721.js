@@ -34,13 +34,13 @@ describe("ERC721 contract", () => {
     it("should fail if less than 0.5 eth provided", async () => {
       await expect(
         deployedContract.mint("", { value: "1000000000000000" })
-      ).to.be.revertedWith("0.5 eth is required to mint.");
+      ).to.be.revertedWith("0.5 eth required to mint");
     });
 
     it("should fail if more than 0.5 eth provided", async () => {
       await expect(
         deployedContract.mint("", { value: "600000000000000000" })
-      ).to.be.revertedWith("0.5 eth is required to mint.");
+      ).to.be.revertedWith("0.5 eth required to mint");
     });
 
     it("should pass if 0.5 eth provided", async () => {
@@ -48,21 +48,14 @@ describe("ERC721 contract", () => {
         value: "1000000000000000000",
         to: deployedContract.address,
       });
-      await expect(
-        deployedContract.mint("", { value: "500000000000000000" })
-      ).to.equal(2);
+      deployedContract.connect(acc2).mint("", { value: "500000000000000000" });
+      await expect(deployedContract.balanceOf(acc2)).to.equal(1);
     });
 
     it("should revert when called from contract", async () => {
-      await acc1.sendTransaction({
-        value: "5000000000000000000",
-        to: testingContract.address,
-      });
-      await expect(
-        deployedContract
-          .connect(testingContract)
-          .mint("", { value: "500000000000000000" })
-      ).to.be.revertedWith("msg.sender is not a externally owned wallet");
+      await expect(testingDeployedContract.callMint()).to.be.revertedWith(
+        "msg.sender not EOW"
+      );
     });
   });
 });
