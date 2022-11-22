@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { BigNumber } = require("ethers");
 
 describe("ERC721 contract", () => {
   let owners, acc1, acc2;
@@ -44,18 +45,25 @@ describe("ERC721 contract", () => {
     });
 
     it("should pass if 0.5 eth provided", async () => {
-      await acc1.sendTransaction({
-        value: "1000000000000000000",
-        to: deployedContract.address,
-      });
-      deployedContract.connect(acc2).mint("", { value: "500000000000000000" });
-      await expect(deployedContract.balanceOf(acc2)).to.equal(1);
+      await deployedContract
+        .connect(acc2)
+        .mint("", { value: "500000000000000000" });
+      const balance = await deployedContract.balanceOf(acc2.address);
+      await expect(BigNumber.from(balance)).to.equal(1);
     });
 
     it("should revert when called from contract", async () => {
       await expect(testingDeployedContract.callMint()).to.be.revertedWith(
         "msg.sender not EOW"
       );
+    });
+
+    it("list owner's nfts", async () => {
+      await deployedContract
+        .connect(acc2)
+        .mint("", { value: "500000000000000000" });
+      const value = await deployedContract.getNFTsForOwner(acc2.address);
+      expect(BigNumber.from(value[0])).to.equal(1);
     });
   });
 });
