@@ -10,8 +10,6 @@
   "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
-    "chai": "^4.2.0",
-    "ethers": "^5.0.0",
     "hardhat": "^2.6.8"
   },
   "dependencies": {
