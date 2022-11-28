@@ -1,33 +1,35 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.9.0; //should be greater than 0.8
+pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract ATNFT is ERC721URIStorage, Ownable {
+contract ATNFT is ERC721URIStorage {
     using Counters for Counters.Counter;
-    Counters.Counter private supply;
+    Counters.Counter private _supply;
+    mapping(address => mapping(uint256 => uint256)) public _ownersNFTs;
 
-    constructor() ERC721("Ayush Thakur", "ATNFT") {
-        //constant param reduces gas
-    }
+    event Minted(address _from, uint256 _id, string _tokenURI);
+
+    constructor() ERC721("Ayush Thakur", "ATNFT") {}
 
     receive() external payable {}
 
     function mint(string memory _tokenURI) external payable returns (uint256) {
-        require(
-            !isContract(msg.sender),
-            "msg.sender is not a externally owned wallet"
-        );
-        require(msg.value == 0.5 ether, "0.5 eth is required to mint.");
-        supply.increment();
+        require(!isContract(msg.sender), "msg.sender not EOW");
+        require(msg.value == 0.5 ether, "0.5 eth required to mint");
+        _supply.increment();
 
-        uint256 tokenId = supply.current();
+        uint256 _ownerBalance = balanceOf(msg.sender);
+
+        uint256 tokenId = _supply.current();
         _mint(msg.sender, tokenId);
 
+        _ownersNFTs[msg.sender][_ownerBalance] = tokenId;
+
         _setTokenURI(tokenId, _tokenURI);
+
+        emit Minted(msg.sender, tokenId, _tokenURI);
 
         return tokenId;
     }
@@ -43,18 +45,31 @@ contract ATNFT is ERC721URIStorage, Ownable {
         }
         return (size > 0); //Warning: will return false if the call is made from the constructor of a smart contract
     }
+
+    function getNFTsForOwner(address walletAddress)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256 ownerBalance = balanceOf(walletAddress);
+        uint256[] memory NFTs = new uint256[](ownerBalance);
+        for (uint256 i = 0; i < ownerBalance; i++) {
+            NFTs[i] = _ownersNFTs[walletAddress][i];
+        }
+        return NFTs;
+    }
 }
 
 contract Testing {
-    ATNFT tokenContract;
+    ATNFT private _tokenContract;
 
     constructor(address _contractAddress) {
-        tokenContract = ATNFT(payable(_contractAddress));
+        _tokenContract = ATNFT(payable(_contractAddress));
     }
 
     receive() external payable {}
 
     function callMint() public payable {
-        tokenContract.mint(" ");
+        _tokenContract.mint("");
     }
 }

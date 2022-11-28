@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { ethers } = require("hardhat");
 
 describe("ERC721 contract", () => {
   let owners, acc1, acc2;
@@ -33,36 +34,37 @@ describe("ERC721 contract", () => {
   describe("mint functionalities", async () => {
     it("should fail if less than 0.5 eth provided", async () => {
       await expect(
-        deployedContract.mint("", { value: "1000000000000000" })
-      ).to.be.revertedWith("0.5 eth is required to mint.");
+        deployedContract.mint("", { value: ethers.utils.parseEther("0.1") })
+      ).to.be.revertedWith("0.5 eth required to mint");
     });
 
     it("should fail if more than 0.5 eth provided", async () => {
       await expect(
-        deployedContract.mint("", { value: "600000000000000000" })
-      ).to.be.revertedWith("0.5 eth is required to mint.");
+        deployedContract.mint("", { value: ethers.utils.parseEther("0.6") })
+      ).to.be.revertedWith("0.5 eth required to mint");
     });
 
     it("should pass if 0.5 eth provided", async () => {
-      await acc1.sendTransaction({
-        value: "1000000000000000000",
-        to: deployedContract.address,
-      });
-      await expect(
-        deployedContract.mint("", { value: "500000000000000000" })
-      ).to.equal(2);
+      await deployedContract
+        .connect(acc2)
+        .mint("", { value: ethers.utils.parseEther("0.5") });
+      const balance = await deployedContract.balanceOf(acc2.address);
+      console.log("balance>>", balance);
+      expect(balance).to.equal(1);
     });
 
     it("should revert when called from contract", async () => {
-      await acc1.sendTransaction({
-        value: "5000000000000000000",
-        to: testingContract.address,
-      });
-      await expect(
-        deployedContract
-          .connect(testingContract)
-          .mint("", { value: "500000000000000000" })
-      ).to.be.revertedWith("msg.sender is not a externally owned wallet");
+      await expect(testingDeployedContract.callMint()).to.be.revertedWith(
+        "msg.sender not EOW"
+      );
+    });
+
+    it("list owner's nfts", async () => {
+      await deployedContract
+        .connect(acc2)
+        .mint("", { value: ethers.utils.parseEther("0.5") });
+      const value = await deployedContract.getNFTsForOwner(acc2.address);
+      expect(value[0]).to.equal(1);
     });
   });
 });

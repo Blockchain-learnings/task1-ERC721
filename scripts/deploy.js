@@ -1,12 +1,36 @@
 const { ethers } = require("hardhat");
+const { appendFileSync } = require("fs");
 async function main() {
   const ATNFT = await ethers.getContractFactory("ATNFT");
   const deployedATNFT = await ATNFT.deploy();
-  console.log("deployedATNFT>>", deployedATNFT.address);
+  console.log("deployedATNFT address>>", deployedATNFT.address);
+
+  appendFileSync(
+    "deploy.json",
+    JSON.stringify(
+      {
+        //Factory: Factoryinst.address,
+        ATNFT: deployedATNFT.address,
+      },
+      null,
+      1
+    )
+  );
 
   const Testing = await ethers.getContractFactory("Testing");
   const deployedTesting = await Testing.deploy(deployedATNFT.address);
-  console.log("deployedTesting>>", deployedTesting.address);
+  appendFileSync(
+    "deploy.json",
+    JSON.stringify(
+      {
+        //Factory: Factoryinst.address,
+        Testing: deployedATNFT.address,
+      },
+      null,
+      1
+    )
+  );
+  console.log("deployedTesting address>>", deployedTesting.address);
 }
 
 main()
@@ -17,5 +41,3 @@ main()
     console.log(e);
     process.exit(0);
   });
-//   deployedATNFT>> 0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44
-//   deployedTesting>> 0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f
